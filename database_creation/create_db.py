@@ -1,3 +1,4 @@
+import re
 import argparse
 import json
 import sqlite3
@@ -20,20 +21,25 @@ def create_database(dbs: List[Path]):
     cursor.execute("USE spider")
     for db in dbs:
         cursor.execute(f"CREATE SCHEMA {db.stem}")
-    conn.close()
     ddls = Path("./schemas").glob("**/*.sql")
     for ddl in ddls:
-        subprocess.run(
-            [
-                "/opt/mssql-tools/bin/sqlcmd",
-                "-U",
-                "SA",
-                "-P",
-                "Passw0rd!",
-                "-i",
-                str(ddl),
-            ]
-        )
+        statements = re.split(r'(?i)^\s*GO\s*$', ddl.read_text(), flags=re.MULTILINE)
+        for statement in statements:
+            if statement.strip():  # Skip empty statements
+                cursor.execute(statement)
+        # subprocess.run(
+        #     [
+        #         "/opt/mssql-tools18/bin/sqlcmd",
+        #         "-U",
+        #         "SA",
+        #         "-P",
+        #         "Passw0rd!",
+        #         "-i",
+        #         str(ddl),
+        #     ]
+        # )
+    conn.commit()
+    conn.close()
 
 
 def get_tables(cursor):
