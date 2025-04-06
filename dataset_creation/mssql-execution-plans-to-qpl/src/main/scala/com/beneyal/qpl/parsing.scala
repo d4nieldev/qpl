@@ -76,6 +76,12 @@ object parsing {
         parseTop((node \ "Top").head)
       case ("TopN Sort", "Sort") =>
         parseTopSort((node \ "TopSort").head)
+      case ("Gather Streams", "Parallelism") |
+           ("Repartition Streams", "Parallelism") |
+           ("Distribute Streams" , "Parallelism") =>
+        parseSpool((node \ "Parallelism").head)
+      case ("Bitmap Create", "Bitmap") | ("Bitmap", "Bitmap") =>
+        parseSpool((node \ "Bitmap").head)
       case _ =>
         throw new RuntimeException(s"Unknown RelOp combo: ($logicalOp, $physicalOp)")
     }
@@ -330,8 +336,16 @@ object parsing {
         Identifier(columnReference)
       case "Intrinsic" =>
         val functionName   = operator \@ "FunctionName"
-        val List(lhs, rhs) = operator.child.map(parseScalarOperator).toList
-        Intrinsic(functionName, lhs, rhs)
+        // val List(lhs, rhs) = operator.child.map(parseScalarOperator).toList
+        // Intrinsic(functionName, lhs, rhs)
+        val args = operator.child.map(parseScalarOperator).toList
+        args match {
+          case Nil          => throw new RuntimeException("Intrinsic with no arguments")
+          case head :: tail =>
+          tail.foldLeft(head) { (acc, next) =>
+            Intrinsic(functionName, acc, next)
+          }
+        }
       case "Logical" =>
         val operation       = operator \@ "Operation"
         val scalarOperators = operator.child.map(parseScalarOperator)

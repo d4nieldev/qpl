@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List
 
 import pymssql
-import regex as re
+import re
 from tqdm.auto import tqdm
 
 from evaluation import Evaluator, Schema, get_schema, get_sql
