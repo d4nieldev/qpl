@@ -5,6 +5,6 @@ output-*
 **/.bsp
 **/.metals
 **/.scala-build
+**/output/**
 
 .venv
-output
