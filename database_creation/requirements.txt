@@ -1,0 +1,7 @@
+pandas
+numpy
+pymssql
+sqlalchemy
+tqdm
+pyodbc
+nltk
